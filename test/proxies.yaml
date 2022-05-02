@@ -1,0 +1,10 @@
+proxies:
+  - {
+      "name": "本地节点 1",
+      "type": "ss",
+      "server": "127.0.0.1",
+      "port": "12345",
+      "cipher": "chacha20-ietf-poly1305",
+      "password": "zxczxc11111",
+      "udp": false,
+    }
