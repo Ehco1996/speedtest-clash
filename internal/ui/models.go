@@ -1,15 +1,19 @@
 package ui
 
 import (
+	"errors"
 	"time"
 
+	"github.com/Dreamacro/clash/constant"
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/Ehco1996/clash-speed/pkg/clash"
 )
 
 type model struct {
 	proxyIdx          int
 	selectedProxyNode string
-	proxyNodeList     []string
+	proxyNodeList     []constant.Proxy
 
 	serverIdx      int
 	selectedServer string
@@ -22,9 +26,23 @@ type model struct {
 func InitialModel() model {
 	// for now everything is fake
 	return model{
-		proxyNodeList:  []string{"ss 节点", "vmess 节点"},
+		proxyNodeList:  []constant.Proxy{},
 		testServerList: []string{"江苏联通", "上海电信"},
 	}
+}
+
+func (m *model) FetchProxy(path string) error {
+	cfg, err := clash.LoadConfig(path)
+	if err != nil {
+		return err
+	}
+	for _, p := range cfg.Proxies {
+		m.proxyNodeList = append(m.proxyNodeList, p)
+	}
+	if len(m.proxyNodeList) == 0 {
+		return errors.New("not have enough proxy nodes")
+	}
+	return nil
 }
 
 func (m model) Init() tea.Cmd {
@@ -62,7 +80,7 @@ func (m model) updateForProxyNode(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.proxyIdx++
 			}
 		case "enter":
-			m.selectedProxyNode = m.proxyNodeList[m.proxyIdx]
+			m.selectedProxyNode = m.proxyNodeList[m.proxyIdx].Name()
 		}
 	}
 	return m, nil
@@ -103,7 +121,7 @@ func (m model) updateTestPrecent(msg tea.Msg) (tea.Model, tea.Cmd) {
 type tickMsg struct{}
 
 func tickOneSecond() tea.Cmd {
-	return tea.Tick(time.Second, func(time.Time) tea.Msg {
+	return tea.Tick(time.Second/10, func(time.Time) tea.Msg {
 		return tickMsg{}
 	})
 }

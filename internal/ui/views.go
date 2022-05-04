@@ -32,7 +32,7 @@ func (m model) viewSelectNode() string {
 
 	nodes := ""
 	for i, node := range m.proxyNodeList {
-		nodes += fmt.Sprintf("%s\n", checkbox(node, m.proxyIdx == i))
+		nodes += fmt.Sprintf("%s\n", checkbox(node.Name(), m.proxyIdx == i))
 	}
 	return fmt.Sprintf(tpl, nodes)
 }
