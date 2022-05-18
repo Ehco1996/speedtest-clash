@@ -41,6 +41,9 @@ func (m model) viewSelectServer() string {
 	// header
 	tpl := "\nChoose your speed test server...\n"
 
+	// set user info
+	tpl += "\n" + m.c.CurrentUser().String() + "\n"
+
 	// body
 	tpl += "\n%s\n"
 
@@ -48,8 +51,8 @@ func (m model) viewSelectServer() string {
 	tpl += subtle("up/down: select") + dot + subtle("enter: choose") + dot + subtle("q, esc: quit")
 
 	server := ""
-	for i, name := range m.testServerList {
-		server += fmt.Sprintf("%s\n", checkbox(name, m.serverIdx == i))
+	for i, s := range m.testServerList {
+		server += fmt.Sprintf("%s\n", checkbox(s.String(), m.serverIdx == i))
 	}
 	return fmt.Sprintf(tpl, server)
 }

@@ -1,13 +1,16 @@
 package ui
 
 import (
+	"context"
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/Dreamacro/clash/constant"
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/Ehco1996/clash-speed/pkg/clash"
+	"github.com/Ehco1996/clash-speed/pkg/speedtest"
 )
 
 type model struct {
@@ -17,18 +20,16 @@ type model struct {
 
 	serverIdx      int
 	selectedServer string
-	testServerList []string
+	testServerList speedtest.ServerList
 
 	testPrecent float64
 	quitting    bool
+
+	c *speedtest.Client
 }
 
 func InitialModel() model {
-	// for now everything is fake
-	return model{
-		proxyNodeList:  []constant.Proxy{},
-		testServerList: []string{"江苏联通", "上海电信"},
-	}
+	return model{proxyNodeList: []constant.Proxy{}}
 }
 
 func (m *model) FetchProxy(path string) error {
@@ -42,6 +43,25 @@ func (m *model) FetchProxy(path string) error {
 	if len(m.proxyNodeList) == 0 {
 		return errors.New("not have enough proxy nodes")
 	}
+
+	// init inner speed test client
+	m.c = speedtest.NewClient(http.DefaultClient)
+	return nil
+}
+
+func (m *model) FetchTestServers() error {
+	ctx := context.TODO()
+	_, err := m.c.FetchUserInfo(ctx)
+	if err != nil {
+		return err
+	}
+
+	serverList, err := m.c.FetchServerList(ctx)
+	if err != nil {
+		return err
+	}
+
+	m.testServerList = serverList
 	return nil
 }
 
@@ -99,7 +119,7 @@ func (m model) updateForTestServer(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.serverIdx++
 			}
 		case "enter":
-			m.selectedServer = m.testServerList[m.serverIdx]
+			m.selectedServer = m.testServerList[m.serverIdx].Name
 			return m, tickOneSecond()
 		}
 	}
