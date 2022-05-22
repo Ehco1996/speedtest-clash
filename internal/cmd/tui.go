@@ -10,9 +10,6 @@ func runTUI() error {
 	if err := m.FetchProxy(cfgFile); err != nil {
 		return err
 	}
-	if err := m.FetchTestServers(); err != nil {
-		return err
-	}
 	p := tea.NewProgram(m)
 	return p.Start()
 }

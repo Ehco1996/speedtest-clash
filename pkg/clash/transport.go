@@ -1,4 +1,4 @@
-package http
+package clash
 
 import (
 	"context"
@@ -8,20 +8,19 @@ import (
 	"time"
 
 	"github.com/Dreamacro/clash/constant"
-
-	"github.com/Ehco1996/clash-speed/pkg/clash"
 )
 
 type ClashTransport struct {
-	tp http.Transport
-
-	currentURL *url.URL
-
 	proxy constant.Proxy
+	tp    http.Transport
+
+	// change with every request
+	currentURL *url.URL
 }
 
-func NewClashTransport() *ClashTransport {
-	c := &ClashTransport{}
+func NewClashTransport(p constant.Proxy) *ClashTransport {
+	c := &ClashTransport{proxy: p}
+
 	tp := http.Transport{
 		// from http.DefaultTransport
 		MaxIdleConns:          100,
@@ -40,7 +39,7 @@ func (c *ClashTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func (c *ClashTransport) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
-	meta, err := clash.URLToMetadata(c.currentURL)
+	meta, err := URLToMetadata(c.currentURL)
 	conn, err := c.proxy.DialContext(ctx, meta)
 	if err != nil {
 		return nil, err

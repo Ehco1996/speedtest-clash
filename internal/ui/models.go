@@ -44,9 +44,6 @@ func (m *model) FetchProxy(path string) error {
 	if len(m.proxyNodeList) == 0 {
 		return errors.New("not have enough proxy nodes")
 	}
-
-	// init inner speed test client
-	m.c = speedtest.NewClient(http.DefaultClient)
 	return nil
 }
 
@@ -109,7 +106,15 @@ func (m model) updateForProxyNode(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.proxyIdx++
 			}
 		case "enter":
+			// user selected one proxy node, let init data with this proxy
 			m.selectedProxyNode = m.proxyNodeList[m.proxyIdx].Name()
+			// init inner speed test proxy client
+			hc := &http.Client{Transport: clash.NewClashTransport(m.proxyNodeList[m.proxyIdx])}
+			m.c = speedtest.NewClient(hc)
+			// TODO: this is a slow io, maybe add some hints in ui
+			if err := m.FetchTestServers(); err != nil {
+				panic(err) // TODO: new a ui to show error
+			}
 		}
 	}
 	return m, nil
