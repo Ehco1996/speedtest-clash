@@ -8,6 +8,7 @@ import (
 
 	"github.com/Dreamacro/clash/constant"
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/Ehco1996/clash-speed/pkg/clash"
 	"github.com/Ehco1996/clash-speed/pkg/speedtest"
@@ -60,9 +61,17 @@ func (m *model) FetchTestServers() error {
 	if err != nil {
 		return err
 	}
-
 	m.testServerList = serverList
-	return nil
+
+	// fetch ping
+	eg, ctx := errgroup.WithContext(ctx)
+	for idx := range m.testServerList {
+		s := m.testServerList[idx]
+		eg.Go(func() error {
+			return s.GetPingLatency(ctx)
+		})
+	}
+	return eg.Wait()
 }
 
 func (m model) Init() tea.Cmd {

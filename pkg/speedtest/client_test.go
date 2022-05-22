@@ -30,3 +30,20 @@ func TestClient_FetchServerList(t *testing.T) {
 		println(serverList[idx].String())
 	}
 }
+
+func TestClient_Server_PingTest(t *testing.T) {
+	ctx := context.TODO()
+	c := NewClient(http.DefaultClient)
+	user, err := c.FetchUserInfo(ctx)
+	require.NoError(t, err)
+	require.NotEmpty(t, user)
+	println(user.String())
+
+	serverList, err := c.FetchServerList(ctx)
+	require.NoError(t, err)
+	for idx := range serverList {
+		s := serverList[idx]
+		println(s.String())
+		require.NoError(t, s.GetPingLatency(ctx))
+	}
+}

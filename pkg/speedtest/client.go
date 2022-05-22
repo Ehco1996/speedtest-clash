@@ -71,17 +71,17 @@ func (c *Client) FetchServerList(ctx context.Context) (ServerList, error) {
 		return nil, errors.New("failed to fetch servers")
 	}
 
-	// Calculate distance
+	// Calculate distance and set client
 	for _, server := range serverList {
 		sLat, _ := strconv.ParseFloat(server.Lat, 64)
 		sLon, _ := strconv.ParseFloat(server.Lon, 64)
 		uLat, _ := strconv.ParseFloat(c.user.Lat, 64)
 		uLon, _ := strconv.ParseFloat(c.user.Lon, 64)
 		server.Distance = distance(sLat, sLon, uLat, uLon)
+		server.client = c.inner
 	}
 
 	// Sort by distance
 	sort.Sort(serverList)
-
 	return serverList, nil
 }

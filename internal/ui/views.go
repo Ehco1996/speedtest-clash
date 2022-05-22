@@ -52,7 +52,8 @@ func (m model) viewSelectServer() string {
 
 	server := ""
 	for i, s := range m.testServerList {
-		server += fmt.Sprintf("%s\n", checkbox(s.String(), m.serverIdx == i))
+		info := s.String() + fmt.Sprintf(" latency=[%dms]", s.Latency.Milliseconds())
+		server += fmt.Sprintf("%s\n", checkbox(info, m.serverIdx == i))
 	}
 	return fmt.Sprintf(tpl, server)
 }
