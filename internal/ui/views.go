@@ -2,15 +2,11 @@ package ui
 
 import (
 	"fmt"
-	"math"
-	"strings"
-
-	"github.com/muesli/termenv"
 )
 
 func (m model) View() string {
 	if m.quitting {
-		return "\n  See you later!\n\n"
+		return "\n  See you later!\n\n Press ctrl + c to quit"
 	}
 	if m.selectedProxyNode == "" {
 		return m.viewSelectNode()
@@ -62,7 +58,7 @@ func (m model) viewSpeedTest() string {
 	label := "SpeedTesting..."
 	msg := fmt.Sprintf("Proxy Node is %s and test server is %s...",
 		keyword(m.selectedProxyNode), keyword(m.selectedServer))
-	return subtle(msg) + "\n\n" + label + "\n" + progressbar(80, m.testPrecent) + "%"
+	return subtle(msg) + "\n\n" + label + "\n" + m.progress.View()
 }
 
 func checkbox(label string, checked bool) string {
@@ -70,19 +66,4 @@ func checkbox(label string, checked bool) string {
 		return colorFg("[x] "+label, "212")
 	}
 	return fmt.Sprintf("[ ] %s", label)
-}
-
-func progressbar(width int, percent float64) string {
-	w := float64(progressBarWidth)
-
-	fullSize := int(math.Round(w * percent))
-	var fullCells string
-	for i := 0; i < fullSize; i++ {
-		fullCells += termenv.String(progressFullChar).Foreground(term.Color(ramp[i])).String()
-	}
-
-	emptySize := int(w) - fullSize
-	emptyCells := strings.Repeat(progressEmpty, emptySize)
-
-	return fmt.Sprintf("%s%s %3.0f", fullCells, emptyCells, math.Round(percent*100))
 }

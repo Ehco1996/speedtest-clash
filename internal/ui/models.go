@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Dreamacro/clash/constant"
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.org/x/sync/errgroup"
 
@@ -23,14 +24,21 @@ type model struct {
 	selectedServer string
 	testServerList speedtest.ServerList
 
-	testPrecent float64
-	quitting    bool
+	quitting bool
 
 	c *speedtest.Client
+
+	// sub models
+	progress progress.Model
 }
 
+var _ tea.Model = (*model)(nil)
+
 func InitialModel() model {
-	return model{proxyNodeList: []constant.Proxy{}}
+	return model{
+		proxyNodeList: []constant.Proxy{},
+		progress:      progress.New(progress.WithDefaultGradient()),
+	}
 }
 
 func (m *model) FetchProxy(path string) error {
@@ -71,6 +79,7 @@ func (m *model) FetchTestServers() error {
 	return eg.Wait()
 }
 
+// TODO: maybe move all io operations here
 func (m model) Init() tea.Cmd {
 	return nil
 }
@@ -88,9 +97,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.selectedProxyNode == "" {
 		return m.updateForProxyNode(msg)
 	} else if m.selectedServer == "" {
-		return m.updateForTestServer(msg)
+		return m.updateForSelectTestServer(msg)
 	}
-	return m.updateTestPrecent(msg)
+	return m.updateForTestProgress(msg)
 }
 
 func (m model) updateForProxyNode(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -120,7 +129,7 @@ func (m model) updateForProxyNode(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) updateForTestServer(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) updateForSelectTestServer(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -134,28 +143,36 @@ func (m model) updateForTestServer(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "enter":
 			m.selectedServer = m.testServerList[m.serverIdx].Name
-			return m, tickOneSecond()
+			// after select, we start draw progress
+			return m, tickOnceForProgress()
 		}
 	}
 	return m, nil
 }
 
-func (m model) updateTestPrecent(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) updateForTestProgress(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg.(type) {
 	case tickMsg:
-		m.testPrecent += float64(0.2)
-		if m.testPrecent >= float64(1) {
-			m.testPrecent = float64(1)
+		if m.progress.Percent() >= 1.0 {
+			m.quitting = true
+			return m, nil
 		}
-		return m, tickOneSecond()
+		// TODO this is a fake progress
+		cmd := m.progress.IncrPercent(0.1)
+		return m, tea.Batch(tickOnceForProgress(), cmd)
+		// FrameMsg is sent when the progress bar wants to animate itself
+	case progress.FrameMsg:
+		progressModel, cmd := m.progress.Update(msg)
+		m.progress = progressModel.(progress.Model)
+		return m, cmd
 	}
 	return m, nil
 }
 
 type tickMsg struct{}
 
-func tickOneSecond() tea.Cmd {
-	return tea.Tick(time.Second/10, func(time.Time) tea.Msg {
+func tickOnceForProgress() tea.Cmd {
+	return tea.Tick(time.Second, func(time.Time) tea.Msg {
 		return tickMsg{}
 	})
 }
