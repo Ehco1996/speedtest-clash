@@ -73,7 +73,7 @@ func (svrs ServerList) Less(i, j int) bool {
 	return svrs[i].Distance < svrs[j].Distance
 }
 
-func distance(lat1 float64, lon1 float64, lat2 float64, lon2 float64) float64 {
+func Distance(lat1 float64, lon1 float64, lat2 float64, lon2 float64) float64 {
 	radius := 6378.137
 
 	a1 := lat1 * math.Pi / 180.0

@@ -62,11 +62,17 @@ func colorToHex(c colorful.Color) string {
 }
 
 // Helper function for converting colors to hex. Assumes a value between 0 and
-// 1.
 func colorFloatToHex(f float64) (s string) {
 	s = strconv.FormatInt(int64(f*255), 16)
 	if len(s) == 1 {
 		s = "0" + s
 	}
 	return
+}
+
+func checkbox(label string, checked bool) string {
+	if checked {
+		return colorFg("[x] "+label, "212")
+	}
+	return fmt.Sprintf("[ ] %s", label)
 }

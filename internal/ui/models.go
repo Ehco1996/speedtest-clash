@@ -1,15 +1,14 @@
 package ui
 
 import (
-	"context"
-	"errors"
 	"net/http"
 	"time"
 
 	"github.com/Dreamacro/clash/constant"
 	"github.com/charmbracelet/bubbles/progress"
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
-	"golang.org/x/sync/errgroup"
+	"github.com/charmbracelet/lipgloss"
 
 	"github.com/Ehco1996/clash-speed/pkg/clash"
 	"github.com/Ehco1996/clash-speed/pkg/speedtest"
@@ -30,58 +29,24 @@ type model struct {
 
 	// sub models
 	progress progress.Model
+	sp       modelSpeedTest
 }
 
 var _ tea.Model = (*model)(nil)
 
 func InitialModel() model {
+	s := spinner.New()
+	s.Spinner = spinner.Dot
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	return model{
 		proxyNodeList: []constant.Proxy{},
 		progress:      progress.New(progress.WithDefaultGradient()),
+		sp: modelSpeedTest{
+			upload:   0,
+			download: 0,
+			spinner:  s,
+		},
 	}
-}
-
-func (m *model) FetchProxy(path string) error {
-	cfg, err := clash.LoadConfig(path)
-	if err != nil {
-		return err
-	}
-	for _, p := range cfg.Proxies {
-		m.proxyNodeList = append(m.proxyNodeList, p)
-	}
-	if len(m.proxyNodeList) == 0 {
-		return errors.New("not have enough proxy nodes")
-	}
-	return nil
-}
-
-func (m *model) FetchTestServers() error {
-	ctx := context.TODO()
-	_, err := m.c.FetchUserInfo(ctx)
-	if err != nil {
-		return err
-	}
-
-	serverList, err := m.c.FetchServerList(ctx)
-	if err != nil {
-		return err
-	}
-	m.testServerList = serverList
-
-	// fetch ping
-	eg, ctx := errgroup.WithContext(ctx)
-	for idx := range m.testServerList {
-		s := m.testServerList[idx]
-		eg.Go(func() error {
-			return s.GetPingLatency(ctx)
-		})
-	}
-	return eg.Wait()
-}
-
-// TODO: maybe move all io operations here
-func (m model) Init() tea.Cmd {
-	return nil
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -159,12 +124,20 @@ func (m model) updateForTestProgress(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		// TODO this is a fake progress
 		cmd := m.progress.IncrPercent(0.1)
-		return m, tea.Batch(tickOnceForProgress(), cmd)
+		m.sp.download += 1
+		m.sp.upload += 1
+		return m, tea.Batch(tickOnceForProgress(), cmd, m.sp.spinner.Tick)
 		// FrameMsg is sent when the progress bar wants to animate itself
 	case progress.FrameMsg:
 		progressModel, cmd := m.progress.Update(msg)
 		m.progress = progressModel.(progress.Model)
 		return m, cmd
+	case spinner.TickMsg:
+		if !m.quitting {
+			s, cmd := m.sp.spinner.Update(spinner.Tick())
+			m.sp.spinner = s
+			return m, cmd
+		}
 	}
 	return m, nil
 }
@@ -175,4 +148,10 @@ func tickOnceForProgress() tea.Cmd {
 	return tea.Tick(time.Second, func(time.Time) tea.Msg {
 		return tickMsg{}
 	})
+}
+
+type modelSpeedTest struct {
+	download int64
+	upload   int64
+	spinner  spinner.Model
 }

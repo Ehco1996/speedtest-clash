@@ -5,9 +5,6 @@ import (
 )
 
 func (m model) View() string {
-	if m.quitting {
-		return "\n  See you later!\n\n Press ctrl + c to quit"
-	}
 	if m.selectedProxyNode == "" {
 		return m.viewSelectNode()
 	} else if m.selectedServer == "" {
@@ -56,14 +53,24 @@ func (m model) viewSelectServer() string {
 
 func (m model) viewSpeedTest() string {
 	label := "SpeedTesting..."
-	msg := fmt.Sprintf("Proxy Node is %s and test server is %s...",
+
+	title := fmt.Sprintf("Proxy Node is %s and the test server is %s",
 		keyword(m.selectedProxyNode), keyword(m.selectedServer))
-	return subtle(msg) + "\n\n" + label + "\n" + m.progress.View()
+
+	speedDownload := fmt.Sprintf("\nDownloading %s ....  %d Mbps", m.sp.spinner.View(), m.sp.download)
+	speedUpload := fmt.Sprintf("\nUploading %s ....  %d Mbps", m.sp.spinner.View(), m.sp.upload)
+
+	content := subtle(title) + "\n\n" + label + "\n" + m.progress.View() + "\n" + speedDownload + speedUpload
+
+	if m.quitting {
+		content += m.viewQuit()
+	}
+	return content
 }
 
-func checkbox(label string, checked bool) string {
-	if checked {
-		return colorFg("[x] "+label, "212")
+func (m model) viewQuit() string {
+	if m.quitting {
+		return "\n\nSee you later!\n\nPress ctrl + c to quit！"
 	}
-	return fmt.Sprintf("[ ] %s", label)
+	return ""
 }
