@@ -46,7 +46,7 @@ func (m *model) FetchTestServers() error {
 	for idx := range m.testServerList {
 		s := m.testServerList[idx]
 		eg.Go(func() error {
-			return s.GetPingLatency(ctx)
+			return s.GetPingLatency(ctx, m.c.GetInnerClient())
 		})
 	}
 	return eg.Wait()

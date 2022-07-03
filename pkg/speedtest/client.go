@@ -20,6 +20,10 @@ func NewClient(c *http.Client) *Client {
 	return &Client{inner: c}
 }
 
+func (c *Client) GetInnerClient() *http.Client {
+	return c.inner
+}
+
 func (c *Client) CurrentUser() *User {
 	return c.user
 }
@@ -78,7 +82,6 @@ func (c *Client) FetchServerList(ctx context.Context) (ServerList, error) {
 		uLat, _ := strconv.ParseFloat(c.user.Lat, 64)
 		uLon, _ := strconv.ParseFloat(c.user.Lon, 64)
 		server.Distance = Distance(sLat, sLon, uLat, uLon)
-		server.client = c.inner
 	}
 
 	// Sort by distance

@@ -12,7 +12,7 @@ import (
 
 type ClashTransport struct {
 	proxy constant.Proxy
-	tp    http.Transport
+	tp    *http.Transport
 
 	// change with every request
 	currentURL *url.URL
@@ -21,7 +21,7 @@ type ClashTransport struct {
 func NewClashTransport(p constant.Proxy) *ClashTransport {
 	c := &ClashTransport{proxy: p}
 
-	tp := http.Transport{
+	tp := &http.Transport{
 		// from http.DefaultTransport
 		MaxIdleConns:          100,
 		IdleConnTimeout:       90 * time.Second,
@@ -40,6 +40,9 @@ func (c *ClashTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 func (c *ClashTransport) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
 	meta, err := URLToMetadata(c.currentURL)
+	if err != nil {
+		return nil, err
+	}
 	conn, err := c.proxy.DialContext(ctx, meta)
 	if err != nil {
 		return nil, err
