@@ -61,17 +61,17 @@ func (s *Server) GetPingLatency(ctx context.Context, c *http.Client) error {
 	return nil
 }
 
-func (s *Server) DownLoadTest(ctx context.Context, c *http.Client) error {
+func (s *Server) DownLoadTest(ctx context.Context, c *http.Client) (chan Result, error) {
 	// TODO config this
 	size := dlSizes[2] // 750*750.jpg ~= 500k one request
 	threadCount := 1
+	resChan := make(chan Result, 1)
 
 	// base download url
 	dlURL := strings.Split(s.URL, "/upload.php")[0] + "/random" + strconv.Itoa(size) + "x" + strconv.Itoa(size) + ".jpg"
 
 	eg, ctx := errgroup.WithContext(ctx)
 	respBytes := atomic.NewInt64(0)
-
 	sTime := time.Now()
 	for i := 0; i < threadCount; i++ {
 		eg.Go(func() error {
@@ -79,6 +79,7 @@ func (s *Server) DownLoadTest(ctx context.Context, c *http.Client) error {
 				s, err := downloadRequest(ctx, c, dlURL)
 				if err == nil {
 					respBytes.Add(s)
+					resChan <- Result{CurrentSpeed: calcMbpsSpeed(respBytes.Load(), sTime), CurrentBytes: respBytes.Load()}
 				} else {
 					return err
 				}
@@ -86,14 +87,18 @@ func (s *Server) DownLoadTest(ctx context.Context, c *http.Client) error {
 			return nil
 		})
 	}
-	if err := eg.Wait(); err != nil {
-		return err
-	}
-	fTime := time.Now()
-	// MBps(MB per second)
-	MBps := float64(respBytes.Load()) / 1000 / 1000 / fTime.Sub(sTime).Seconds()
-	s.DLSpeed = math.Round(MBps * 8)
-	return nil
+
+	// start speed test thread
+	go func() {
+		if err := eg.Wait(); err != nil {
+			// TODO add err ch
+			println(err.Error())
+		}
+		close(resChan)
+		s.DLSpeed = calcMbpsSpeed(respBytes.Load(), sTime)
+	}()
+
+	return resChan, nil
 }
 
 func downloadRequest(ctx context.Context, c *http.Client, dlURL string) (int64, error) {
@@ -137,4 +142,16 @@ func Distance(lat1 float64, lon1 float64, lat2 float64, lon2 float64) float64 {
 
 	x := math.Sin(a1)*math.Sin(a2) + math.Cos(a1)*math.Cos(a2)*math.Cos(b2-b1)
 	return radius * math.Acos(x)
+}
+
+type Result struct {
+	CurrentSpeed float64
+	CurrentBytes int64
+}
+
+func calcMbpsSpeed(bytes int64, startTime time.Time) float64 {
+	fTime := time.Now()
+	// MBps(MB per second)
+	MBps := float64(bytes) / 1000 / 1000 / fTime.Sub(startTime).Seconds()
+	return math.Round(MBps * 8)
 }

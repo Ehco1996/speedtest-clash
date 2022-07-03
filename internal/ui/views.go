@@ -57,10 +57,10 @@ func (m model) viewSpeedTest() string {
 	title := fmt.Sprintf("Proxy Node is %s and the test server is %s",
 		keyword(m.selectedProxyNode), keyword(m.selectedServer))
 
-	speedDownload := fmt.Sprintf("\nDownloading %s ....  %d Mbps", m.sp.spinner.View(), m.sp.download)
-	speedUpload := fmt.Sprintf("\nUploading %s ....  %d Mbps", m.sp.spinner.View(), m.sp.upload)
+	speedDownload := fmt.Sprintf("\nDownloading %s ....  %.2f mbps", m.sp.spinner.View(), m.sp.currentRes.CurrentSpeed)
+	// speedUpload := fmt.Sprintf("\nUploading %s ....  %d Mbps", m.sp.spinner.View(), m.sp.upload)
 
-	content := subtle(title) + "\n\n" + label + "\n" + m.progress.View() + "\n" + speedDownload + speedUpload
+	content := subtle(title) + "\n\n" + label + "\n" + m.progress.View() + "\n" + speedDownload
 
 	if m.quitting {
 		content += m.viewQuit()

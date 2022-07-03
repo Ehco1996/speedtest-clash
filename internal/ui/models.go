@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -41,11 +42,7 @@ func InitialModel() model {
 	return model{
 		proxyNodeList: []constant.Proxy{},
 		progress:      progress.New(progress.WithDefaultGradient()),
-		sp: modelSpeedTest{
-			upload:   0,
-			download: 0,
-			spinner:  s,
-		},
+		sp:            modelSpeedTest{spinner: s},
 	}
 }
 
@@ -107,8 +104,11 @@ func (m model) updateForSelectTestServer(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.serverIdx++
 			}
 		case "enter":
-			m.selectedServer = m.testServerList[m.serverIdx].Name
+			s := m.testServerList[m.serverIdx]
+			m.selectedServer = s.Name
 			// after select, we start draw progress
+			// TODO handle err
+			m.sp.resChan, _ = s.DownLoadTest(context.TODO(), m.c.GetInnerClient())
 			return m, tickOnceForProgress()
 		}
 	}
@@ -123,9 +123,8 @@ func (m model) updateForTestProgress(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		// TODO this is a fake progress
+		m.sp.currentRes = <-m.sp.resChan
 		cmd := m.progress.IncrPercent(0.1)
-		m.sp.download += 1
-		m.sp.upload += 1
 		return m, tea.Batch(tickOnceForProgress(), cmd, m.sp.spinner.Tick)
 		// FrameMsg is sent when the progress bar wants to animate itself
 	case progress.FrameMsg:
@@ -151,7 +150,7 @@ func tickOnceForProgress() tea.Cmd {
 }
 
 type modelSpeedTest struct {
-	download int64
-	upload   int64
-	spinner  spinner.Model
+	spinner    spinner.Model
+	resChan    chan speedtest.Result
+	currentRes speedtest.Result
 }
