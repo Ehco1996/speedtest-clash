@@ -48,7 +48,6 @@ func InitialModel() model {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	log.Printf("updated %v", msg)
 	// Make sure these keys always quit
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
@@ -108,9 +107,8 @@ func (m model) updateForSelectTestServer(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			s := m.testServerList[m.serverIdx]
 			m.selectedServer = s.Name
-			// after select, we start draw progress
-			// TODO handle err
-			m.sp.resChan, _ = s.DownLoadTest(context.TODO(), m.c.GetInnerClient())
+			// TODO handle err,config concurrency
+			m.sp.resChan, _ = s.DownLoadTest(context.TODO(), m.c.GetInnerClient(), 10, 20)
 			return m, tickOnceForProgress()
 		}
 	}
@@ -124,9 +122,11 @@ func (m model) updateForTestProgress(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 			return m, nil
 		}
-		// TODO this is a fake progress
-		m.sp.currentRes = <-m.sp.resChan
-		cmd := m.progress.IncrPercent(0.1)
+		res := <-m.sp.resChan
+		m.sp.currentRes = res
+
+		log.Printf("received %f %f %d", res.CurrentSpeed, res.Percent, res.TotalBytes)
+		cmd := m.progress.SetPercent(res.Percent)
 		return m, tea.Batch(tickOnceForProgress(), cmd, m.sp.spinner.Tick)
 		// FrameMsg is sent when the progress bar wants to animate itself
 	case progress.FrameMsg:
@@ -143,7 +143,9 @@ func (m model) updateForTestProgress(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-type tickMsg struct{}
+type tickMsg struct {
+	res speedtest.Result
+}
 
 func tickOnceForProgress() tea.Cmd {
 	return tea.Tick(time.Second, func(time.Time) tea.Msg {

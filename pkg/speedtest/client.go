@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"sync"
+
+	"go.uber.org/atomic"
 )
 
 type Client struct {
@@ -82,6 +85,11 @@ func (c *Client) FetchServerList(ctx context.Context) (ServerList, error) {
 		uLat, _ := strconv.ParseFloat(c.user.Lat, 64)
 		uLon, _ := strconv.ParseFloat(c.user.Lon, 64)
 		server.Distance = Distance(sLat, sLon, uLat, uLon)
+
+		// init server metrics
+		server.mutex = &sync.Mutex{}
+		server.downLoadTestReceivedBytes = atomic.NewInt64(0)
+		server.downLoadTestRequestCnt = atomic.NewInt64(0)
 	}
 
 	// Sort by distance

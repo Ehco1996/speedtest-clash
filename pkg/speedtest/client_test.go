@@ -62,11 +62,11 @@ func TestClient_Server_DownLoad(t *testing.T) {
 	require.Greater(t, len(serverList), 0)
 	s := serverList[0]
 
-	ch, err := s.DownLoadTest(ctx, c.GetInnerClient())
+	ch, err := s.DownLoadTest(ctx, c.GetInnerClient(), 1, 1)
 	require.NoError(t, err)
 
 	for res := range ch {
-		fmt.Printf("current download speed is %.2f mpbs total bytes %d mb \n", res.CurrentSpeed, res.CurrentBytes/1000/1000)
+		fmt.Printf("current download speed is %.2f mpbs total bytes %d mb \n", res.CurrentSpeed, res.TotalBytes)
 	}
 
 	require.Greater(t, s.DLSpeed, float64(0))

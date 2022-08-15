@@ -2,6 +2,7 @@ package clash
 
 import (
 	"context"
+	"crypto/tls"
 	"net"
 	"net/http"
 	"net/url"
@@ -28,6 +29,7 @@ func NewClashTransport(p constant.Proxy) *ClashTransport {
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 	}
+	tp.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	tp.DialContext = c.DialContext
 	c.tp = tp
 	return c

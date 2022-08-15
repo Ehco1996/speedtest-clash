@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"math"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"go.uber.org/atomic"
@@ -31,6 +33,10 @@ type Server struct {
 	Latency  time.Duration `json:"latency"`
 	DLSpeed  float64       `json:"dl_speed"` // Mbps
 	ULSpeed  float64       `json:"ul_speed"` // Mbps
+
+	mutex                     *sync.Mutex
+	downLoadTestReceivedBytes *atomic.Int64
+	downLoadTestRequestCnt    *atomic.Int64
 }
 
 func (s *Server) String() string {
@@ -61,25 +67,36 @@ func (s *Server) GetPingLatency(ctx context.Context, c *http.Client) error {
 	return nil
 }
 
-func (s *Server) DownLoadTest(ctx context.Context, c *http.Client) (chan Result, error) {
-	// TODO config this
-	size := dlSizes[2] // 750*750.jpg ~= 500k one request
-	threadCount := 1
+func (s *Server) DownLoadTest(ctx context.Context, c *http.Client, concurrency, requestCount int) (chan Result, error) {
+	s.mutex.Lock()
 	resChan := make(chan Result, 1)
-
 	// base download url
-	dlURL := strings.Split(s.URL, "/upload.php")[0] + "/random" + strconv.Itoa(size) + "x" + strconv.Itoa(size) + ".jpg"
+	dlURL := strings.Split(s.URL, "/upload.php")[0] + "/random" + strconv.Itoa(downloadSize) + "x" + strconv.Itoa(downloadSize) + ".jpg"
+	log.Printf("start download test url: %s", dlURL)
+	totalRequest := concurrency * requestCount
 
 	eg, ctx := errgroup.WithContext(ctx)
-	respBytes := atomic.NewInt64(0)
+
+	// init one test metrics
+	s.downLoadTestReceivedBytes.Store(0)
+	s.downLoadTestRequestCnt.Store(0)
+
 	sTime := time.Now()
-	for i := 0; i < threadCount; i++ {
+
+	for i := 0; i < concurrency; i++ {
 		eg.Go(func() error {
-			for i := 0; i < 10; i++ {
-				s, err := downloadRequest(ctx, c, dlURL)
+			for i := 0; i < requestCount; i++ {
+				size, err := downloadRequest(ctx, c, dlURL)
 				if err == nil {
-					respBytes.Add(s)
-					resChan <- Result{CurrentSpeed: calcMbpsSpeed(respBytes.Load(), sTime), CurrentBytes: respBytes.Load()}
+					s.downLoadTestReceivedBytes.Add(size)
+					s.downLoadTestRequestCnt.Add(1)
+					totalBytes := s.downLoadTestReceivedBytes.Load()
+					res := Result{
+						CurrentSpeed: calcMbpsSpeed(totalBytes, sTime),
+						TotalBytes:   totalBytes,
+						Percent:      float64(s.downLoadTestRequestCnt.Load()) / float64(totalRequest),
+					}
+					resChan <- res
 				} else {
 					return err
 				}
@@ -95,7 +112,11 @@ func (s *Server) DownLoadTest(ctx context.Context, c *http.Client) (chan Result,
 			println(err.Error())
 		}
 		close(resChan)
-		s.DLSpeed = calcMbpsSpeed(respBytes.Load(), sTime)
+		s.DLSpeed = calcMbpsSpeed(s.downLoadTestReceivedBytes.Load(), sTime)
+		// clear one test metrics
+		s.downLoadTestReceivedBytes.Store(0)
+		s.downLoadTestRequestCnt.Store(0)
+		s.mutex.Unlock()
 	}()
 
 	return resChan, nil
@@ -146,7 +167,8 @@ func Distance(lat1 float64, lon1 float64, lat2 float64, lon2 float64) float64 {
 
 type Result struct {
 	CurrentSpeed float64
-	CurrentBytes int64
+	TotalBytes   int64
+	Percent      float64
 }
 
 func calcMbpsSpeed(bytes int64, startTime time.Time) float64 {
