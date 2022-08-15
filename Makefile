@@ -10,7 +10,7 @@ REVISION=$(shell git rev-parse --short HEAD)
 # for more information, please refer to https://stackoverflow.com/questions/22267189/what-does-the-w-flag-mean-when-passed-in-via-the-ldflags-option-to-the-go-comman
 GOBUILD=CGO_ENABLED=0 go build -trimpath -ldflags="-w -s -X ${PACKAGE}.GitBranch=${BRANCH} -X ${PACKAGE}.GitRevision=${REVISION} -X ${PACKAGE}.BuildTime=${BUILDTIME}"
 
-.PHONY: fmt test build tidy ensure release
+.PHONY: fmt test build tidy
 
 fmt:
 	golangci-lint run --fix

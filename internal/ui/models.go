@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 
@@ -41,12 +42,13 @@ func InitialModel() model {
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	return model{
 		proxyNodeList: []constant.Proxy{},
-		progress:      progress.New(progress.WithDefaultGradient()),
 		sp:            modelSpeedTest{spinner: s},
+		progress:      progress.New(progress.WithDefaultGradient()),
 	}
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	log.Printf("updated %v", msg)
 	// Make sure these keys always quit
 	if msg, ok := msg.(tea.KeyMsg); ok {
 		k := msg.String()
