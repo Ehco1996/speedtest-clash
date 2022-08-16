@@ -8,3 +8,266 @@ proxies:
       "password": "zxczxc11111",
       "udp": false,
     }
+  - {
+      "name": "本地节点 2",
+      "type": "ss",
+      "server": "127.0.0.1",
+      "port": "12345",
+      "cipher": "chacha20-ietf-poly1305",
+      "password": "zxczxc11111",
+      "udp": false,
+    }
+  # - {
+  #     "name": "本地节点 3",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 4",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 5",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 6",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 7",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 8",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 9",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 10",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+
+  # - {
+  #     "name": "本地节点 11",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 12",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 13",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 14",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 15",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 16",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 17",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 18",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 19",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 20",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+
+  # - {
+  #     "name": "本地节点 21",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 22",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 23",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 24",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 25",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 26",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 27",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 28",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 29",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }
+  # - {
+  #     "name": "本地节点 30",
+  #     "type": "ss",
+  #     "server": "127.0.0.1",
+  #     "port": "12345",
+  #     "cipher": "chacha20-ietf-poly1305",
+  #     "password": "zxczxc11111",
+  #     "udp": false,
+  #   }

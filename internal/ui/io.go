@@ -20,9 +20,9 @@ func (m *model) FetchProxy(path string) error {
 		return err
 	}
 	for _, p := range cfg.Proxies {
-		m.proxyNodeList = append(m.proxyNodeList, p)
+		m.ps.proxyNodeList = append(m.ps.proxyNodeList, p)
 	}
-	if len(m.proxyNodeList) == 0 {
+	if len(m.ps.proxyNodeList) == 0 {
 		return errors.New("not have enough proxy nodes")
 	}
 	return nil
@@ -39,12 +39,12 @@ func (m *model) FetchTestServers() error {
 	if err != nil {
 		return err
 	}
-	m.testServerList = serverList
+	m.sts.testServerList = serverList
 
 	// fetch ping
 	eg, ctx := errgroup.WithContext(ctx)
-	for idx := range m.testServerList {
-		s := m.testServerList[idx]
+	for idx := range m.sts.testServerList {
+		s := m.sts.testServerList[idx]
 		eg.Go(func() error {
 			return s.GetPingLatency(ctx, m.c.GetInnerClient())
 		})

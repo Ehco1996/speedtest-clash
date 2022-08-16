@@ -67,23 +67,21 @@ func (s *Server) GetPingLatency(ctx context.Context, c *http.Client) error {
 	return nil
 }
 
-func (s *Server) DownLoadTest(ctx context.Context, c *http.Client, concurrency, requestCount int) (chan Result, error) {
+func (s *Server) DownLoadTest(ctx context.Context, c *http.Client, concurrency, requestCount, downloadSize int) (chan Result, error) {
 	s.mutex.Lock()
-	resChan := make(chan Result, 1)
 	// base download url
 	dlURL := strings.Split(s.URL, "/upload.php")[0] + "/random" + strconv.Itoa(downloadSize) + "x" + strconv.Itoa(downloadSize) + ".jpg"
 	log.Printf("start download test url: %s", dlURL)
 	totalRequest := concurrency * requestCount
-
-	eg, ctx := errgroup.WithContext(ctx)
+	resChan := make(chan Result, totalRequest)
 
 	// init one test metrics
 	s.downLoadTestReceivedBytes.Store(0)
 	s.downLoadTestRequestCnt.Store(0)
 
 	sTime := time.Now()
-
-	for i := 0; i < concurrency; i++ {
+	eg, ctx := errgroup.WithContext(ctx)
+	for idx := 0; idx < concurrency; idx++ {
 		eg.Go(func() error {
 			for i := 0; i < requestCount; i++ {
 				size, err := downloadRequest(ctx, c, dlURL)
@@ -169,6 +167,10 @@ type Result struct {
 	CurrentSpeed float64
 	TotalBytes   int64
 	Percent      float64
+}
+
+func (r *Result) String() string {
+	return fmt.Sprintf("cur speed=%f cur bytes=%d cur percent=%f", r.CurrentSpeed, r.TotalBytes, r.Percent)
 }
 
 func calcMbpsSpeed(bytes int64, startTime time.Time) float64 {

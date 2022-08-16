@@ -2,12 +2,13 @@ package ui
 
 import (
 	"fmt"
+	"log"
 )
 
 func (m model) View() string {
-	if m.selectedProxyNode == "" {
+	if m.ps.selectedProxyNode == "" {
 		return m.viewSelectNode()
-	} else if m.selectedServer == "" {
+	} else if m.sts.selectedServer == "" {
 		return m.viewSelectServer()
 	}
 	return m.viewSpeedTest()
@@ -24,8 +25,8 @@ func (m model) viewSelectNode() string {
 	tpl += subtle("up/down: select") + dot + subtle("enter: choose") + dot + subtle("q, esc: quit")
 
 	nodes := ""
-	for i, node := range m.proxyNodeList {
-		nodes += fmt.Sprintf("%s\n", checkbox(node.Name(), m.proxyIdx == i))
+	for i, node := range m.ps.proxyNodeList {
+		nodes += fmt.Sprintf("%s\n", checkbox(node.Name(), m.ps.proxyIdx == i))
 	}
 	return fmt.Sprintf(tpl, nodes)
 }
@@ -44,23 +45,29 @@ func (m model) viewSelectServer() string {
 	tpl += subtle("up/down: select") + dot + subtle("enter: choose") + dot + subtle("q, esc: quit")
 
 	server := ""
-	for i, s := range m.testServerList {
+	for i, s := range m.sts.testServerList {
 		info := s.String() + fmt.Sprintf(" latency=[%dms]", s.Latency.Milliseconds())
-		server += fmt.Sprintf("%s\n", checkbox(info, m.serverIdx == i))
+		server += fmt.Sprintf("%s\n", checkbox(info, m.sts.serverIdx == i))
 	}
 	return fmt.Sprintf(tpl, server)
 }
 
 func (m model) viewSpeedTest() string {
+	log.Printf("refresh once res=%s ", m.str.currentRes.String())
+
 	label := "SpeedTesting..."
 
 	title := fmt.Sprintf("Proxy Node is %s and the test server is %s",
-		keyword(m.selectedProxyNode), keyword(m.selectedServer))
+		keyword(m.ps.selectedProxyNode), keyword(m.sts.selectedServer))
 
-	speedDownload := fmt.Sprintf("\nDownloading %s ....  %.2f mbps", m.sp.spinner.View(), m.sp.currentRes.CurrentSpeed)
+	speed := m.str.currentRes.CurrentSpeed
+	if m.quitting {
+		speed = m.sts.testServerList[m.sts.serverIdx].DLSpeed
+	}
+	speedDownload := fmt.Sprintf("\nDownloading %s ....  %.2f mbps", m.str.spinner.View(), speed)
 	// speedUpload := fmt.Sprintf("\nUploading %s ....  %d Mbps", m.sp.spinner.View(), m.sp.upload)
 
-	content := subtle(title) + "\n\n" + label + "\n" + m.progress.View() + "\n" + speedDownload
+	content := subtle(title) + "\n\n" + label + "\n" + m.str.progress.View() + "\n" + speedDownload
 
 	if m.quitting {
 		content += m.viewQuit()

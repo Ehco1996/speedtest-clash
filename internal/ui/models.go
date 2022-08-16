@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Dreamacro/clash/constant"
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -17,21 +18,13 @@ import (
 )
 
 type model struct {
-	proxyIdx          int
-	selectedProxyNode string
-	proxyNodeList     []constant.Proxy
-
-	serverIdx      int
-	selectedServer string
-	testServerList speedtest.ServerList
-
 	quitting bool
-
-	c *speedtest.Client
+	c        *speedtest.Client
 
 	// sub models
-	progress progress.Model
-	sp       modelSpeedTest
+	ps  modelProxyServer
+	str modelSpeedTestRes
+	sts modelSpeedTestServer
 }
 
 var _ tea.Model = (*model)(nil)
@@ -41,9 +34,9 @@ func InitialModel() model {
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	return model{
-		proxyNodeList: []constant.Proxy{},
-		sp:            modelSpeedTest{spinner: s},
-		progress:      progress.New(progress.WithDefaultGradient()),
+		ps:  modelProxyServer{},
+		sts: modelSpeedTestServer{},
+		str: modelSpeedTestRes{spinner: s, progress: progress.New(progress.WithDefaultGradient())},
 	}
 }
 
@@ -57,9 +50,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	if m.selectedProxyNode == "" {
+	if m.ps.selectedProxyNode == "" {
 		return m.updateForProxyNode(msg)
-	} else if m.selectedServer == "" {
+	} else if m.sts.selectedServer == "" {
 		return m.updateForSelectTestServer(msg)
 	}
 	return m.updateForTestProgress(msg)
@@ -70,18 +63,18 @@ func (m model) updateForProxyNode(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "up":
-			if m.proxyIdx > 0 {
-				m.proxyIdx--
+			if m.ps.proxyIdx > 0 {
+				m.ps.proxyIdx--
 			}
 		case "down":
-			if m.proxyIdx < len(m.proxyNodeList)-1 {
-				m.proxyIdx++
+			if m.ps.proxyIdx < len(m.ps.proxyNodeList)-1 {
+				m.ps.proxyIdx++
 			}
 		case "enter":
 			// user selected one proxy node, let init data with this proxy
-			m.selectedProxyNode = m.proxyNodeList[m.proxyIdx].Name()
+			m.ps.selectedProxyNode = m.ps.proxyNodeList[m.ps.proxyIdx].Name()
 			// init inner speed test proxy client
-			hc := &http.Client{Transport: clash.NewClashTransport(m.proxyNodeList[m.proxyIdx])}
+			hc := &http.Client{Transport: clash.NewClashTransport(m.ps.proxyNodeList[m.ps.proxyIdx])}
 			m.c = speedtest.NewClient(hc)
 			// TODO: this is a slow io, maybe add some hints in ui
 			if err := m.FetchTestServers(); err != nil {
@@ -97,18 +90,18 @@ func (m model) updateForSelectTestServer(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "up":
-			if m.serverIdx > 0 {
-				m.serverIdx--
+			if m.sts.serverIdx > 0 {
+				m.sts.serverIdx--
 			}
 		case "down":
-			if m.serverIdx < len(m.testServerList)-1 {
-				m.serverIdx++
+			if m.sts.serverIdx < len(m.sts.testServerList)-1 {
+				m.sts.serverIdx++
 			}
 		case "enter":
-			s := m.testServerList[m.serverIdx]
-			m.selectedServer = s.Name
-			// TODO handle err,config concurrency
-			m.sp.resChan, _ = s.DownLoadTest(context.TODO(), m.c.GetInnerClient(), 10, 20)
+			s := m.sts.testServerList[m.sts.serverIdx]
+			m.sts.selectedServer = s.Name
+			// TODO handle err
+			m.str.resChan, _ = s.DownLoadTest(context.TODO(), m.c.GetInnerClient(), DownLoadConcurrency, requestCount, downloadSize)
 			return m, tickOnceForProgress()
 		}
 	}
@@ -117,44 +110,58 @@ func (m model) updateForSelectTestServer(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) updateForTestProgress(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg.(type) {
-	case tickMsg:
-		if m.progress.Percent() >= 1.0 {
+	case speedTestTickMsg:
+		if m.str.progress.Percent() >= 1.0 {
 			m.quitting = true
 			return m, nil
 		}
-		res := <-m.sp.resChan
-		m.sp.currentRes = res
-
-		log.Printf("received %f %f %d", res.CurrentSpeed, res.Percent, res.TotalBytes)
-		cmd := m.progress.SetPercent(res.Percent)
-		return m, tea.Batch(tickOnceForProgress(), cmd, m.sp.spinner.Tick)
+		res := <-m.str.resChan
+		log.Printf("tick once res=%s ", res.String())
+		m.str.currentRes = res
+		cmd := m.str.progress.SetPercent(res.Percent)
+		return m, tea.Batch(cmd, tickOnceForProgress(), m.str.spinner.Tick)
 		// FrameMsg is sent when the progress bar wants to animate itself
 	case progress.FrameMsg:
-		progressModel, cmd := m.progress.Update(msg)
-		m.progress = progressModel.(progress.Model)
+		progressModel, cmd := m.str.progress.Update(msg)
+		m.str.progress = progressModel.(progress.Model)
 		return m, cmd
 	case spinner.TickMsg:
 		if !m.quitting {
-			s, cmd := m.sp.spinner.Update(spinner.Tick())
-			m.sp.spinner = s
+			s, cmd := m.str.spinner.Update(spinner.Tick())
+			m.str.spinner = s
 			return m, cmd
 		}
 	}
 	return m, nil
 }
 
-type tickMsg struct {
-	res speedtest.Result
-}
+type speedTestTickMsg struct{}
 
 func tickOnceForProgress() tea.Cmd {
-	return tea.Tick(time.Second, func(time.Time) tea.Msg {
-		return tickMsg{}
+	return tea.Tick(time.Microsecond, func(time.Time) tea.Msg {
+		return speedTestTickMsg{}
 	})
 }
 
-type modelSpeedTest struct {
+// used for trigger download/upload test
+type modelSpeedTestRes struct {
+	progress   progress.Model
 	spinner    spinner.Model
 	resChan    chan speedtest.Result
 	currentRes speedtest.Result
+}
+
+// used for user select test server
+type modelSpeedTestServer struct {
+	serverIdx      int
+	selectedServer string
+	testServerList speedtest.ServerList
+}
+
+// used for user select proxy server
+type modelProxyServer struct {
+	proxyIdx          int
+	selectedProxyNode string
+	uiList            list.Model
+	proxyNodeList     []constant.Proxy
 }

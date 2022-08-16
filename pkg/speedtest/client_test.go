@@ -62,7 +62,7 @@ func TestClient_Server_DownLoad(t *testing.T) {
 	require.Greater(t, len(serverList), 0)
 	s := serverList[0]
 
-	ch, err := s.DownLoadTest(ctx, c.GetInnerClient(), 1, 1)
+	ch, err := s.DownLoadTest(ctx, c.GetInnerClient(), 1, 1, 500)
 	require.NoError(t, err)
 
 	for res := range ch {
