@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -41,7 +42,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "",
 		"clash config file path (also support download from http such as your clash subscribe link)")
 
-	// TODO support more flag such as test duration
 	rootCmd.PersistentFlags().IntVar(&ui.DownLoadConcurrency, "concurrency", 1,
 		"tcp concurrency, note that more concurrency will use more traffic")
+
+	rootCmd.PersistentFlags().DurationVar(&ui.TestDuration, "duration", 3*time.Second,
+		"time duration for speed test")
 }

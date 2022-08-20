@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -62,7 +63,7 @@ func TestClient_Server_DownLoad(t *testing.T) {
 	require.Greater(t, len(serverList), 0)
 	s := serverList[0]
 
-	ch, err := s.DownLoadTest(ctx, c.GetInnerClient(), 1, 1, 500)
+	ch, err := s.DownLoadTest(ctx, c.GetInnerClient(), 1, 500, time.Second)
 	require.NoError(t, err)
 
 	for res := range ch {

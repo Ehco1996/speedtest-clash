@@ -39,7 +39,6 @@ func InitialModel() model {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-
 	if msg, ok := msg.(tea.WindowSizeMsg); ok {
 		h, v := proxyNodeListStyle.GetFrameSize()
 		m.ps.uiList.SetSize(msg.Width-h, msg.Height-v)
@@ -106,7 +105,7 @@ func (m model) updateForSelectTestServer(msg tea.Msg) (tea.Model, tea.Cmd) {
 			s := m.ts.testServerList[m.ts.serverIdx]
 			m.ts.selectedServer = s.Name
 			// TODO handle err
-			m.tp.ch, _ = s.DownLoadTest(context.TODO(), m.c.GetInnerClient(), DownLoadConcurrency, requestCount, downloadSize)
+			m.tp.ch, _ = s.DownLoadTest(context.Background(), m.c.GetInnerClient(), DownLoadConcurrency, downloadSize, TestDuration)
 			return m, receiveTestResOnce(m.tp.ch)
 		}
 	}
