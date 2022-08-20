@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/Ehco1996/clash-speed/pkg/clash"
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.org/x/sync/errgroup"
 )
@@ -25,6 +26,18 @@ func (m *model) FetchProxy(path string) error {
 	if len(m.ps.proxyNodeList) == 0 {
 		return errors.New("not have enough proxy nodes")
 	}
+
+	// set proxy item
+	items := []list.Item{}
+	for idx := range m.ps.proxyNodeList {
+		items = append(items, proxyItem{m.ps.proxyNodeList[idx]})
+	}
+
+	m.ps.uiList = list.New(items, list.NewDefaultDelegate(), 0, 0)
+	m.ps.uiList.Title = "Choose your proxy node..."
+	m.ps.uiList.SetShowFilter(false)
+	m.ps.uiList.SetShowTitle(true)
+	m.ps.uiList.SetShowHelp(true)
 	return nil
 }
 
@@ -39,12 +52,12 @@ func (m *model) FetchTestServers() error {
 	if err != nil {
 		return err
 	}
-	m.sts.testServerList = serverList
+	m.ts.testServerList = serverList
 
 	// fetch ping
 	eg, ctx := errgroup.WithContext(ctx)
-	for idx := range m.sts.testServerList {
-		s := m.sts.testServerList[idx]
+	for idx := range m.ts.testServerList {
+		s := m.ts.testServerList[idx]
 		eg.Go(func() error {
 			return s.GetPingLatency(ctx, m.c.GetInnerClient())
 		})

@@ -3,15 +3,17 @@ package ui
 import (
 	"fmt"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/termenv"
 )
 
 // General stuff for styling the view
 var (
-	term    = termenv.EnvColorProfile()
-	keyword = makeFgStyle("211")
-	subtle  = makeFgStyle("241")
-	dot     = colorFg(" • ", "236")
+	proxyNodeListStyle = lipgloss.NewStyle().Margin(0, 0)
+	term               = termenv.EnvColorProfile()
+	keyword            = makeFgStyle("211")
+	subtle             = makeFgStyle("241")
+	dot                = colorFg(" • ", "236")
 )
 
 // Color a string's foreground with the given value.

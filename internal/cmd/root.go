@@ -42,6 +42,6 @@ func init() {
 		"clash config file path (also support download from http such as your clash subscribe link)")
 
 	// TODO support more flag such as test duration
-	rootCmd.PersistentFlags().IntVar(&ui.DownLoadConcurrency, "concurrency", 2,
+	rootCmd.PersistentFlags().IntVar(&ui.DownLoadConcurrency, "concurrency", 1,
 		"tcp concurrency, note that more concurrency will use more traffic")
 }
