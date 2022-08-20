@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -35,6 +36,7 @@ type Server struct {
 
 	//one test metrics
 	downLoadTestReceivedBytes *atomic.Int64
+	upLoadTestReceivedBytes   *atomic.Int64
 }
 
 func (s *Server) String() string {
@@ -89,6 +91,7 @@ func (s *Server) DownLoadTest(ctx context.Context, c *http.Client, concurrency, 
 						CurrentSpeed: calcMbpsSpeed(totalBytes, sTime),
 						TotalBytes:   totalBytes,
 						Percent:      calcPercent(sTime, endTime),
+						Type:         "DownLoad",
 					}
 					resChan <- res
 				} else {
@@ -103,13 +106,57 @@ func (s *Server) DownLoadTest(ctx context.Context, c *http.Client, concurrency, 
 		if err := eg.Wait(); err != nil {
 			log.Printf("DownLoadTest meet error=%v", err)
 			// send final res
-			resChan <- Result{Percent: 1.0}
+			resChan <- Result{Percent: 1.0, Type: "DownLoad"}
 		}
 		close(resChan)
 		cancel()
 		s.DLSpeed = calcMbpsSpeed(s.downLoadTestReceivedBytes.Load(), sTime)
-		// clear one test metrics
-		s.downLoadTestReceivedBytes.Store(0)
+	}()
+
+	return resChan, nil
+}
+
+func (s *Server) UpLoadTest(ctx context.Context, c *http.Client, concurrency, size int, duration time.Duration) (chan Result, error) {
+	sTime := time.Now()
+	endTime := time.Now().Add(duration)
+	ctx2, cancel := context.WithDeadline(ctx, endTime)
+	log.Printf("start upload test url: %s", s.URL)
+	resChan := make(chan Result, 10)
+
+	// init one test metrics
+	s.upLoadTestReceivedBytes.Store(0)
+
+	eg, ctx := errgroup.WithContext(ctx2)
+	for idx := 0; idx < concurrency; idx++ {
+		eg.Go(func() error {
+			for {
+				if err := doUploadRequest(ctx, c, size, s.URL); err == nil {
+					s.upLoadTestReceivedBytes.Add(int64(size))
+					totalBytes := s.upLoadTestReceivedBytes.Load()
+					res := Result{
+						CurrentSpeed: calcMbpsSpeed(totalBytes, sTime),
+						TotalBytes:   totalBytes,
+						Percent:      calcPercent(sTime, endTime),
+						Type:         "UpLoad",
+					}
+					resChan <- res
+				} else {
+					return err
+				}
+			}
+		})
+	}
+
+	// start speed test thread
+	go func() {
+		if err := eg.Wait(); err != nil {
+			log.Printf("UpLoadTest meet error=%v", err)
+			// send final res
+			resChan <- Result{Percent: 1.0, Type: "UpLoad"}
+		}
+		close(resChan)
+		cancel()
+		s.ULSpeed = calcMbpsSpeed(s.upLoadTestReceivedBytes.Load(), sTime)
 	}()
 
 	return resChan, nil
@@ -127,6 +174,24 @@ func downloadRequest(ctx context.Context, c *http.Client, dlURL string) (int64, 
 	defer resp.Body.Close()
 	_, err = io.Copy(ioutil.Discard, resp.Body)
 	return resp.ContentLength, err
+}
+
+func doUploadRequest(ctx context.Context, c *http.Client, size int, ulURL string) error {
+	v := url.Values{}
+	v.Add("content", strings.Repeat("0123456789", size*100-51))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, ulURL, strings.NewReader(v.Encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	_, err = io.Copy(ioutil.Discard, resp.Body)
+	return err
 }
 
 type ServerList []*Server
@@ -162,10 +227,11 @@ type Result struct {
 	CurrentSpeed float64
 	TotalBytes   int64
 	Percent      float64
+	Type         string
 }
 
 func (r *Result) String() string {
-	return fmt.Sprintf("cur speed=%f cur bytes=%d cur percent=%f", r.CurrentSpeed, r.TotalBytes, r.Percent)
+	return fmt.Sprintf("cur speed=%f cur bytes=%d cur percent=%f type=%s", r.CurrentSpeed, r.TotalBytes, r.Percent, r.Type)
 }
 
 func calcMbpsSpeed(bytes int64, startTime time.Time) float64 {

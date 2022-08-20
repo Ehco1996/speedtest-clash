@@ -105,7 +105,7 @@ func (m model) updateForSelectTestServer(msg tea.Msg) (tea.Model, tea.Cmd) {
 			s := m.ts.testServerList[m.ts.serverIdx]
 			m.ts.selectedServer = s.Name
 			// TODO handle err
-			m.tp.ch, _ = s.DownLoadTest(context.Background(), m.c.GetInnerClient(), DownLoadConcurrency, downloadSize, TestDuration)
+			m.tp.ch, _ = s.DownLoadTest(context.Background(), m.c.GetInnerClient(), TestConcurrency, downloadSize, TestDuration)
 			return m, receiveTestResOnce(m.tp.ch)
 		}
 	}
@@ -115,14 +115,29 @@ func (m model) updateForSelectTestServer(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) updateForTestProgress(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case speedTestMsg:
+		res := msg.res
+		m.tp.currentRes = res
+		cmd := m.tp.progress.SetPercent(res.Percent)
 
-		if m.tp.progress.Percent() >= 1.0 {
+		// finish upload means all test passed
+		if m.tp.progress.Percent() >= 1.0 && res.Type == "DownLoad" {
+			m.tp.finishDownloadTest = true
+			// clear percent for upload test
+			cmd = m.tp.progress.SetPercent(0)
+			s := m.ts.testServerList[m.ts.serverIdx]
+			m.tp.ch, _ = s.UpLoadTest(context.Background(), m.c.GetInnerClient(), TestConcurrency, uploadSize, TestDuration)
+			return m, receiveTestResOnce(m.tp.ch)
+		}
+
+		if m.tp.progress.Percent() >= 1.0 && res.Type == "UpLoad" {
+			m.tp.finishUploadTest = true
+		}
+
+		if m.tp.finishDownloadTest && m.tp.finishUploadTest {
 			m.quitting = true
 			return m, nil
 		}
-		res := *msg.res
-		m.tp.currentRes = res
-		cmd := m.tp.progress.SetPercent(res.Percent)
+
 		return m, tea.Batch(cmd, m.tp.spinner.Tick, receiveTestResOnce(m.tp.ch))
 
 	case progress.FrameMsg:
@@ -174,15 +189,21 @@ type modelTestProgress struct {
 	spinner    spinner.Model
 
 	ch chan speedtest.Result
+
+	finishDownloadTest bool
+	finishUploadTest   bool
 }
 
 type speedTestMsg struct {
-	res *speedtest.Result
+	res speedtest.Result
 }
 
 func receiveTestResOnce(ch chan speedtest.Result) tea.Cmd {
 	return func() tea.Msg {
-		res := <-ch
-		return speedTestMsg{res: &res}
+		res, ok := <-ch
+		if !ok {
+			return nil
+		}
+		return speedTestMsg{res: res}
 	}
 }

@@ -87,6 +87,7 @@ func (c *Client) FetchServerList(ctx context.Context) (ServerList, error) {
 
 		// init server metrics
 		server.downLoadTestReceivedBytes = atomic.NewInt64(0)
+		server.upLoadTestReceivedBytes = atomic.NewInt64(0)
 	}
 
 	// Sort by distance

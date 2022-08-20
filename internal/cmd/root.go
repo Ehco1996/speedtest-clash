@@ -42,7 +42,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "",
 		"clash config file path (also support download from http such as your clash subscribe link)")
 
-	rootCmd.PersistentFlags().IntVar(&ui.DownLoadConcurrency, "concurrency", 1,
+	rootCmd.PersistentFlags().IntVar(&ui.TestConcurrency, "concurrency", 1,
 		"tcp concurrency, note that more concurrency will use more traffic")
 
 	rootCmd.PersistentFlags().DurationVar(&ui.TestDuration, "duration", 3*time.Second,

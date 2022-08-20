@@ -40,21 +40,26 @@ func (m model) viewSelectServer() string {
 }
 
 func (m model) viewSpeedTest() string {
-	log.Printf("refresh once res=%s percent=%f", m.tp.currentRes.String(), m.tp.progress.Percent())
+	log.Printf("refresh once res=%s", m.tp.currentRes.String())
 
-	label := "SpeedTesting..."
+	label := fmt.Sprintf("Running SpeedTesting Type: %s ...", m.tp.currentRes.Type)
 
 	title := fmt.Sprintf("Proxy Node is %s and the test server is %s",
 		keyword(m.ps.selectedProxyNode), keyword(m.ts.selectedServer))
 
-	speed := m.tp.currentRes.CurrentSpeed
-	if m.quitting {
-		speed = m.ts.testServerList[m.ts.serverIdx].DLSpeed
+	downLoadSpeed := m.tp.currentRes.CurrentSpeed
+	if m.tp.finishDownloadTest {
+		downLoadSpeed = m.ts.testServerList[m.ts.serverIdx].DLSpeed
 	}
-	speedDownload := fmt.Sprintf("\nDownloading %s ....  %.2f mbps", m.tp.spinner.View(), speed)
-	// speedUpload := fmt.Sprintf("\nUploading %s ....  %d Mbps", m.sp.spinner.View(), m.sp.upload)
+	speedDownloadContent := fmt.Sprintf("\nDownloading %s ....  %.2f mbps", m.tp.spinner.View(), downLoadSpeed)
 
-	content := subtle(title) + "\n\n" + label + "\n" + m.tp.progress.View() + "\n" + speedDownload
+	upLoadSpeed := m.tp.currentRes.CurrentSpeed
+	if m.tp.finishUploadTest {
+		upLoadSpeed = m.ts.testServerList[m.ts.serverIdx].ULSpeed
+	}
+	speedUploadContent := fmt.Sprintf("\nUploading %s ....  %.2f mbps", m.tp.spinner.View(), upLoadSpeed)
+
+	content := subtle(title) + "\n\n" + label + "\n" + m.tp.progress.View() + "\n" + speedDownloadContent + "\n" + speedUploadContent
 
 	if m.quitting {
 		content += m.viewQuit()
