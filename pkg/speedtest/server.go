@@ -243,5 +243,5 @@ func calcMbpsSpeed(bytes int64, startTime time.Time) float64 {
 }
 
 func calcPercent(startTime, endTime time.Time) float64 {
-	return float64(time.Now().Sub(startTime)) / float64(endTime.Sub(startTime))
+	return float64(time.Since(startTime)) / float64(endTime.Sub(startTime))
 }
