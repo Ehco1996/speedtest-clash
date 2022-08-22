@@ -2,19 +2,25 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"os"
 
 	"github.com/Ehco1996/speedtest-clash/internal/ui"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func runTUI() error {
-	f, err := tea.LogToFile("debug.log", "")
-	if err != nil {
-		fmt.Println("fatal:", err)
-		os.Exit(1)
+func runTUI(debug bool) error {
+	if debug {
+		f, err := tea.LogToFile("debug.log", "")
+		if err != nil {
+			fmt.Println("fatal:", err)
+			os.Exit(1)
+		}
+		defer f.Close()
+	} else {
+		log.SetOutput(io.Discard)
 	}
-	defer f.Close()
 
 	m := ui.InitialModel()
 	if err := m.FetchProxy(cfgFile); err != nil {

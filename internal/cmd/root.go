@@ -12,6 +12,7 @@ import (
 
 var (
 	cfgFile string
+	debug   bool
 )
 
 var rootCmd = &cobra.Command{
@@ -24,7 +25,7 @@ var rootCmd = &cobra.Command{
 			fmt.Println("cfg file path is empty")
 			os.Exit(1)
 		}
-		if err := runTUI(); err != nil {
+		if err := runTUI(debug); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
@@ -41,6 +42,8 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "",
 		"clash config file path (also support download from http such as your clash subscribe link)")
+
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug log file")
 
 	rootCmd.PersistentFlags().IntVar(&ui.TestConcurrency, "concurrency", 1,
 		"tcp concurrency, note that more concurrency will use more traffic")
