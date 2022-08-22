@@ -1,4 +1,4 @@
-module github.com/Ehco1996/clash-speed
+module github.com/Ehco1996/speedtest-clash
 
 go 1.18
 

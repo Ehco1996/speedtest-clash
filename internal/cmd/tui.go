@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Ehco1996/clash-speed/internal/ui"
+	"github.com/Ehco1996/speedtest-clash/internal/ui"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

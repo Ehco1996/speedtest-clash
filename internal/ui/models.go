@@ -12,8 +12,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/Ehco1996/clash-speed/pkg/clash"
-	"github.com/Ehco1996/clash-speed/pkg/speedtest"
+	"github.com/Ehco1996/speedtest-clash/pkg/clash"
+	"github.com/Ehco1996/speedtest-clash/pkg/speedtest"
 )
 
 type model struct {

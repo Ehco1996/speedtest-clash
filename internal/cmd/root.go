@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Ehco1996/clash-speed/internal/ui"
+	"github.com/Ehco1996/speedtest-clash/internal/ui"
 )
 
 var (
@@ -15,8 +15,8 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:               "clash-speed",
-	Short:             "use clash-speed to test your proxy server speed over www.speedtest.net",
+	Use:               "speedtest-clash",
+	Short:             "use speedtest-clash to test your proxy server speed over www.speedtest.net",
 	CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 	Run: func(cmd *cobra.Command, args []string) {
 

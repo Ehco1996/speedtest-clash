@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Ehco1996/clash-speed/pkg/clash"
+	"github.com/Ehco1996/speedtest-clash/pkg/clash"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"golang.org/x/sync/errgroup"

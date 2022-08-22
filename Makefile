@@ -1,4 +1,4 @@
-NAME=clash-speed
+NAME=speedtest-clash
 BINDIR=dist
 
 PACKAGE=github.com/Ehco1996/ehco/internal/constant
