@@ -130,8 +130,8 @@ func (s *Server) UpLoadTest(ctx context.Context, c *http.Client, concurrency, si
 	for idx := 0; idx < concurrency; idx++ {
 		eg.Go(func() error {
 			for {
-				if err := doUploadRequest(ctx, c, size, s.URL); err == nil {
-					s.upLoadTestReceivedBytes.Add(int64(size))
+				if reqSize, err := doUploadRequest(ctx, c, size, s.URL); err == nil {
+					s.upLoadTestReceivedBytes.Add(int64(reqSize))
 					totalBytes := s.upLoadTestReceivedBytes.Load()
 					res := Result{
 						CurrentSpeed: calcMbpsSpeed(totalBytes, sTime),
@@ -176,22 +176,22 @@ func downloadRequest(ctx context.Context, c *http.Client, dlURL string) (int64, 
 	return resp.ContentLength, err
 }
 
-func doUploadRequest(ctx context.Context, c *http.Client, size int, ulURL string) error {
+func doUploadRequest(ctx context.Context, c *http.Client, size int, ulURL string) (int64, error) {
 	v := url.Values{}
 	v.Add("content", strings.Repeat("0123456789", size*100-51))
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, ulURL, strings.NewReader(v.Encode()))
 	if err != nil {
-		return err
+		return 0, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := c.Do(req)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer resp.Body.Close()
 
 	_, err = io.Copy(ioutil.Discard, resp.Body)
-	return err
+	return req.ContentLength, err
 }
 
 type ServerList []*Server

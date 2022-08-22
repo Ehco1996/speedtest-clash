@@ -53,13 +53,16 @@ func (m model) viewSpeedTest() string {
 	}
 	speedDownloadContent := fmt.Sprintf("\nDownloading %s ....  %.2f mbps", m.tp.spinner.View(), downLoadSpeed)
 
-	upLoadSpeed := m.tp.currentRes.CurrentSpeed
-	if m.tp.finishUploadTest {
-		upLoadSpeed = m.ts.testServerList[m.ts.serverIdx].ULSpeed
-	}
-	speedUploadContent := fmt.Sprintf("\nUploading %s ....  %.2f mbps", m.tp.spinner.View(), upLoadSpeed)
+	content := subtle(title) + "\n\n" + label + "\n\n" + "Test Progress: " + m.tp.progress.View() + "\n" + speedDownloadContent
 
-	content := subtle(title) + "\n\n" + label + "\n" + m.tp.progress.View() + "\n" + speedDownloadContent + "\n" + speedUploadContent
+	if m.tp.finishDownloadTest {
+		upLoadSpeed := m.tp.currentRes.CurrentSpeed
+		if m.tp.finishUploadTest {
+			upLoadSpeed = m.ts.testServerList[m.ts.serverIdx].ULSpeed
+		}
+		speedUploadContent := fmt.Sprintf("\nUploading %s ....  %.2f mbps", m.tp.spinner.View(), upLoadSpeed)
+		content += "\n" + speedUploadContent
+	}
 
 	if m.quitting {
 		content += m.viewQuit()

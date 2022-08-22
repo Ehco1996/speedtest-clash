@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/Dreamacro/clash/constant"
@@ -119,23 +120,23 @@ func (m model) updateForTestProgress(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.tp.currentRes = res
 		cmd := m.tp.progress.SetPercent(res.Percent)
 
-		// finish upload means all test passed
 		if m.tp.progress.Percent() >= 1.0 && res.Type == "DownLoad" {
+			log.Println("in download finish")
 			m.tp.finishDownloadTest = true
-			// clear percent for upload test
-			cmd = m.tp.progress.SetPercent(0)
+			// clear percent and change res chan for upload test
 			s := m.ts.testServerList[m.ts.serverIdx]
 			m.tp.ch, _ = s.UpLoadTest(context.Background(), m.c.GetInnerClient(), TestConcurrency, uploadSize, TestDuration)
-			return m, receiveTestResOnce(m.tp.ch)
+			cmd = tea.Batch(cmd, m.tp.progress.SetPercent(0))
 		}
 
 		if m.tp.progress.Percent() >= 1.0 && res.Type == "UpLoad" {
+			log.Println("in upload finish")
 			m.tp.finishUploadTest = true
 		}
 
 		if m.tp.finishDownloadTest && m.tp.finishUploadTest {
+			log.Println("all finish")
 			m.quitting = true
-			return m, nil
 		}
 
 		return m, tea.Batch(cmd, m.tp.spinner.Tick, receiveTestResOnce(m.tp.ch))
@@ -184,11 +185,11 @@ type modelTestServer struct {
 
 // used for trigger download/upload test
 type modelTestProgress struct {
-	progress   progress.Model
-	currentRes speedtest.Result
-	spinner    spinner.Model
+	progress progress.Model
+	spinner  spinner.Model
 
-	ch chan speedtest.Result
+	currentRes speedtest.Result
+	ch         chan speedtest.Result
 
 	finishDownloadTest bool
 	finishUploadTest   bool
