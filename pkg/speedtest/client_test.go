@@ -51,6 +51,7 @@ func TestClient_Server_PingTest(t *testing.T) {
 }
 
 func TestClient_Server_DownLoad(t *testing.T) {
+	t.Skip("skip this in ci")
 	ctx := context.TODO()
 	c := NewClient(http.DefaultClient)
 	user, err := c.FetchUserInfo(ctx)

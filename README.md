@@ -25,6 +25,38 @@ Flags:
  ./dist/speedtest-clash --config test/proxies.yaml
 ```
 
+```yaml
+# proxies.yaml
+proxies:
+  # Shadowsocks
+  # The supported ciphers (encryption methods):
+  #   aes-128-gcm aes-192-gcm aes-256-gcm
+  #   aes-128-cfb aes-192-cfb aes-256-cfb
+  #   aes-128-ctr aes-192-ctr aes-256-ctr
+  #   rc4-md5 chacha20-ietf xchacha20
+  #   chacha20-ietf-poly1305 xchacha20-ietf-poly1305
+  - name: "ss1"
+    type: ss
+    server: server
+    port: 443
+    cipher: chacha20-ietf-poly1305
+    password: "password"
+    # udp: true
+
+  - name: "ss2"
+    type: ss
+    server: server
+    port: 443
+    cipher: chacha20-ietf-poly1305
+    password: "password"
+    plugin: obfs
+    plugin-opts:
+      mode: tls # or http
+      # host: bing.com
+```
+
+see more yaml config in clash [wiki](https://github.com/Dreamacro/clash/wiki/configuration)
+
 * speed test by clash config from http
 
 ```bash
