@@ -32,3 +32,7 @@ Flags:
 ```
 
 ![Example](./docs/example.svg)
+
+## Install
+
+you can download pre-build binary from github release [page](https://github.com/Ehco1996/speedtest-clash/releases)

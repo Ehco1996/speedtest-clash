@@ -6,7 +6,7 @@ before:
     - sudo apt-get install -y upx
 builds:
   - id: ehco
-    main: ./cmd/ehco/main.go
+    main: ./cmd/main.go
     flags:
       - -trimpath
     ldflags:
@@ -14,7 +14,6 @@ builds:
     goarch:
       - amd64
       - arm64
-      - darwin/arm64
     goarm:
       - 7
     goos:

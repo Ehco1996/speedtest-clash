@@ -8,7 +8,7 @@ on:
       - test-ci
 
 jobs:
-  ci-ci-ci:
+  go-release:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go
