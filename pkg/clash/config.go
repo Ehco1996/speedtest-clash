@@ -46,7 +46,7 @@ func LoadConfig(path string) (*cc.Config, error) {
 	var buf []byte
 	var err error
 
-	if strings.Contains(path, "http") {
+	if strings.Contains(path, "http://") || strings.Contains(path, "https://") {
 		buf, err = readConfigFromHttp(path)
 	} else {
 		buf, err = readConfigFromFile(path)
